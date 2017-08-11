@@ -1,4 +1,4 @@
-# Need: chea2, encode2, 
+# Need: chea2, encode2 
 
 ## Axes of the matrices. 
 tfs<-union(colnames(chea2),colnames(encode2)) 
@@ -31,12 +31,6 @@ for(i in 1:length(tfs)) {
 
 andNetwork1<-andNetwork[!is.na(row.names(andNetwork)),]
 write.table(andNetwork,"C:/Users/maayanlab1/Downloads/andNetwork.csv",sep=",",row.names=TRUE,col.names=TRUE)
-# andNetworkCols<-colnames(andNetwork)
-# write.table(andNetworkCols,"C:/Users/maayanlab1/Downloads/andNetworkCols.tsv",sep="\t",row.names = FALSE,col.names = FALSE)
-# andNetworkRows<-rownames(andNetwork)
-# write.table(andNetworkRows,"C:/Users/maayanlab1/Downloads/andNetworkRows.tsv",sep="\t",row.names = FALSE,col.names = FALSE)
-# c<-read.table("C:/Users/maayanlab1/Downloads/andNetwork.tsv",sep="\t", row.names=andNetworkRows,col.names = andNetworkCols, stringsAsFactors = FALSE)
-# c<-read.csv("C:/Users/maayanlab1/Downloads/andNetwork.csv",row.names=1)
 
 ## Make OR adjacency matrix. 1 if gene is target of that tf in either ChEA or ENCODE, 0 if not. ChEA || ENCODE.
 orNetwork<-matrix(0, length(genes),length(tfs))
@@ -61,7 +55,7 @@ write.table(orNetwork,"C:/Users/maayanlab1/Downloads/orNetwork.csv",sep=",",row.
 
 ## Calculating Jaccard distances
 # install.packages("proxy")
-  library(proxy)
+library(proxy)
 
 andDistances<-dist(andNetwork,method="Jaccard",by_rows=FALSE)
 andDistances2<-as.matrix(andDistances)
@@ -78,8 +72,6 @@ d<-read.table("C:/Users/maayanlab1/Downloads/orDistances2.tsv",sep="\t")
 tfsBoth<-intersect(colnames(chea2),colnames(encode2))
 genesBoth<-intersect(unlist(chea3),unlist(encode2))
 genesBoth = genesBoth[!is.na(genesBoth)]
-
-
 
 andDistances3<-subset(andDistances2,colnames(andDistances2)%in%tfsBoth)
 andDistances3<-subset(andDistances3,colnames(andDistances3)%in%tfsBoth)
