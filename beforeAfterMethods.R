@@ -10,19 +10,20 @@ library(rlist)
 
 datasetsList<- list(cheaDash,encodeDash,coexp)
 
-pValSimple<-function(tf1,tf2) {
+makepVals<-function(x,which_creeds) {
   
-  tf1<-tf1[!is.na(tf1)]
-  tf2<-tf2[!is.na(tf2)]
-  # print(paste(head(tf1),head(tf2),sep="---"))
+  pValSimple<-function(tf1,tf2) {
+    
+    tf1<-tf1[!is.na(tf1)]
+    tf2<-tf2[!is.na(tf2)]
+    # print(paste(head(tf1),head(tf2),sep="---"))
+    
+    contTable<-matrix(c((20000-length(union(tf1,tf2))),length(setdiff(tf2,tf1)),length(setdiff(tf1,tf2)),length(intersect(tf1,tf2))),nrow=2)
+    pVal<-fisher.test(contTable,alternative = "two.sided",conf.int=FALSE)
+    return(pVal[1])
+  }
   
-  contTable<-matrix(c((20000-length(union(tf1,tf2))),length(setdiff(tf2,tf1)),length(setdiff(tf1,tf2)),length(intersect(tf1,tf2))),nrow=2)
-  pVal<-fisher.test(contTable,alternative = "two.sided",conf.int=FALSE)
-  return(pVal[1])
-}
-
-makepVals<-function(x) {
-  pVals<-as.data.frame(do.call(cbind,(apply(creedsFisher, 2, function(d) apply(x,2,pValSimple,tf1=d))))) 
+  pVals<-as.data.frame(do.call(cbind,(apply(which_creeds, 2, function(d) apply(x,2,pValSimple,tf1=d))))) 
   
   pVals<-apply(pVals,c(1,2),unlist)
   pVals<-as.data.frame(pVals,stringsAsFactors=F)
@@ -30,7 +31,7 @@ makepVals<-function(x) {
 }
 
 ptm<-proc.time()
-datasetsList1<-lapply(datasetsList,makepVals)
+datasetsList1<-lapply(datasetsList,makepVals,creedsFisher)
 proc.time()-ptm
 
 ## trying out
@@ -44,18 +45,20 @@ f<-datasetsList1[3]
 f<-as.data.frame(f)
 
 ## Finding the minimum p-value of experiments with the same tfs
-minimum<-function(a,b,dataset=dataset){ 
-  rows<-grep(paste0("^",a,"$"),gsub("-.*","",rownames(as.data.frame(dataset))))
-  
-  if(identical(rows,integer(0))) { # shouldn't happen right now
-    return(1)
-  }
-  else {
-    return(min(as.data.frame(dataset)[rows,b]))
-  } 
-}
 
 consol<-function(dataset) {
+  
+  minimum<-function(a,b,dataset=dataset){ 
+    rows<-grep(paste0("^",a,"$"),gsub("-.*","",rownames(as.data.frame(dataset))),ignore.case = T)
+    
+    if(identical(rows,integer(0))) { # shouldn't happen right now
+      return(1)
+    }
+    else {
+      return(min(as.data.frame(dataset)[rows,b]))
+    } 
+  }
+  
   minPValsLarge<-as.data.frame(do.call(cbind,(lapply(1:length(colnames(as.data.frame(dataset))), function(d) sapply(sort(unique(gsub("-.*","",rownames(as.data.frame(dataset))))),minimum,b=d,dataset=dataset))))) #
   colnames(minPValsLarge)<-colnames(dataset)
   return(minPValsLarge)
@@ -99,7 +102,7 @@ i<-as.data.frame(i)
 ## rank again
 datasetsList5<-lapply(datasetsList5,function(x) apply(x,2,rank))
 
-j<-as.data.frame(datasetsList5[[5]])
+j<-as.data.frame(datasetsList0_ppi_new_creeds[[1]])
 k<-as.data.frame(datasetsList6[[5]])
 l<-as.data.frame(datasetsList5[[7]])
 
@@ -124,7 +127,9 @@ write.table(ranks,"~/ranksTopRankScaled.tsv",col.names = T,row.names=T)
 ranksSmallIntersectionScaled<-ranks
 
 ranked<-function(x,d){ 
-  a<-which(rownames(as.data.frame(d))==gsub("-.*","",colnames(as.data.frame(d))[x]))
+  b<-gsub("-.*","",colnames(as.data.frame(d))[x])
+  a<-grep(paste0("^",b,"$"),rownames(as.data.frame(d)),ignore.case = T) #check datasetsList0
+  #a<-which(rownames(as.data.frame(d))==gsub("-.*","",colnames(as.data.frame(d))[x]))
   if(identical(a,integer(0))) {
     r<-NA
   }
@@ -136,7 +141,16 @@ ranked<-function(x,d){
 }
 
 ## plot
-ranksMeltNormalize<-melt(ranks)
+maximum<-max(as.vector(unlist(ranks)),na.rm = T)
+ranksNormalize<-apply(ranks,c(1,2),normalize,maximum)
+ranksNormalize<-as.data.frame(ranksNormalize,stringsAsFactors = F)
+
+normalize<-function(x,maximum) {
+  x<-as.numeric(x)
+  return(x/maximum)
+}
+
+ranksMeltNormalize<-melt(ranksNormalize)
 
 ggplot(data=subset(ranksMeltNormalize,!is.na(value)),aes(x = value, color = variable)) + geom_density(size=0.75) + theme_classic() + scale_colour_pander() + labs(color="Datasets") + labs(x="Rank of TF",y="Density") + coord_cartesian(xlim = c(0, 1.1), ylim = c(0,3.5),expand = c(0,0))
 

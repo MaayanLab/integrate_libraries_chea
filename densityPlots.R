@@ -55,7 +55,7 @@ plotsList1<-lapply(seq_along(datasetsPlot1),function(i){plots1(datasetsPlot1[[i]
 grid_arrange_shared_legend(plotsList1[[1]], plotsList1[[2]], plotsList1[[3]], plotsList1[[4]], ncol = 2, nrow = 2)
 
 #---------
-plots2<-function(dataset,name) {
+plots2<-function(dataset,name) { # i messed up multipliedPVal accidentally
   
   ggplot(data=subset(dataset,!is.na(value)),aes(x = value, color = variable, linetype = variable)) + geom_density(size=0.705) + theme_classic() + 
     labs(color="Datasets",linetype = "Datasets") + labs(title=name,x="Rank of TF",y="Density") + 
@@ -70,6 +70,23 @@ plots2<-function(dataset,name) {
 datasetsPlot2<-list("Target Genes Intersection"=ranksSmallIntersectionPlotScaled,"Mean Ranks"=ranksSmallMeanRankPlotScaled,"Top Rank"=ranksSmallTopRankPlotScaled,"Multiplied P-Values"=ranksSmallMultPValPlotScaled)
 plotsList2<-lapply(seq_along(datasetsPlot2),function(i){plots2(datasetsPlot2[[i]],names(datasetsPlot2)[i])})
 grid_arrange_shared_legend(plotsList2[[1]], plotsList2[[2]], plotsList2[[3]], plotsList2[[4]], ncol = 2, nrow = 2)
+
+#---------
+plots3<-function(dataset,name) {
+  
+  ggplot(data=subset(dataset,!is.na(value)),aes(x = value, color = variable, linetype = variable)) + geom_density(size=0.705) + theme_classic() + 
+    labs(color="Datasets",linetype = "Datasets") + labs(title=name,x="Rank of TF",y="Density") + 
+    coord_cartesian(xlim = c(0, 1.1), ylim = c(0,2.5),expand = c(0,0)) + 
+    theme(axis.text.x = element_text(size=8,hjust=0),axis.text.y = element_text(size=8),axis.title.x = element_text(size=9),
+          axis.title.y = element_text(size=9),legend.title = element_text(size=9),legend.text = element_text(size=8),
+          plot.title = element_text(size=11,hjust = 0,face="bold")) +
+    scale_colour_manual(values = c("deepskyblue","deepskyblue","seagreen","seagreen","yellow","yellow","navy","navy","red3","red3"))
+}
+
+datasetsPlot3<-list("Target Genes Intersection"=ranksSmallIntersectionPlotScaled,"Mean Ranks"=ranksSmallMeanRankPlotScaled,"Top Rank"=ranksSmallTopRankPlotScaled,"Multiplied P-Values"=ranksSmallMultPValPlotScaled)
+plotsList3<-lapply(seq_along(datasetsPlot3),function(i){plots3(datasetsPlot3[[i]],names(datasetsPlot3)[i])})
+grid_arrange_shared_legend(plotsList3[[1]], plotsList3[[2]], plotsList3[[3]], plotsList3[[4]], ncol = 2, nrow = 2)
+
 
 #--------- for changing the datasets
 ranks<-read.table("~/ranksLarge.tsv",header=T)
